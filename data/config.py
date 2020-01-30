@@ -1,4 +1,5 @@
 # config.py
+import torch
 
 cfg_mnet = {
     'name': 'mobilenet0.25',
@@ -14,7 +15,8 @@ cfg_mnet = {
     'decay1': 190,
     'decay2': 220,
     'image_size': 640,
-    'pretrain': True,
+    # 'pretrain': True,
+    'pretrain': False,
     'return_layers': {'stage1': 1, 'stage2': 2, 'stage3': 3},
     'in_channel': 32,
     'out_channel': 64
@@ -34,7 +36,7 @@ cfg_re50 = {
     'decay1': 70,
     'decay2': 90,
     'image_size': 840,
-    'pretrain': True,
+    'pretrain': False,
     'return_layers': {'layer2': 1, 'layer3': 2, 'layer4': 3},
     'in_channel': 256,
     'out_channel': 256
