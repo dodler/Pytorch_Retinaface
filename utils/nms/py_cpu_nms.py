@@ -6,7 +6,12 @@
 # --------------------------------------------------------
 
 import numpy as np
+from numba import jit
+import numba
 
+
+# @jit("int64[:](float32[:,:], float32)", nopython=True)
+@jit(nopython=True)
 def py_cpu_nms(dets, thresh):
     """Pure Python NMS baseline."""
     x1 = dets[:, 0]
@@ -14,7 +19,6 @@ def py_cpu_nms(dets, thresh):
     x2 = dets[:, 2]
     y2 = dets[:, 3]
     scores = dets[:, 4]
-
     areas = (x2 - x1 + 1) * (y2 - y1 + 1)
     order = scores.argsort()[::-1]
 
