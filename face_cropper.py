@@ -73,6 +73,7 @@ class Cropper:
         net = RetinaFace(cfg=cfg, phase='test')
         net = load_model(net, weights_path, cpu)
         net.eval()
+        print(net)
         print('Finished loading model!')
         if not cpu:
             torch.backends.cudnn.benchmark = True

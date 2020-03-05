@@ -145,6 +145,7 @@ def match(threshold, truths, priors, variances, labels, landms, loc_t, conf_t, l
     matches = truths[best_truth_idx]  # Shape: [num_priors,4] 此处为每一个anchor对应的bbox取出来
     conf = labels[best_truth_idx]  # Shape: [num_priors]      此处为每一个anchor对应的label取出来
     conf[best_truth_overlap < threshold] = 0  # label as background   overlap<0.35的全部作为负样本
+    variances = torch.tensor(variances)
     loc = encode(matches, priors, variances)
 
     matches_landm = landms[best_truth_idx]
