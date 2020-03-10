@@ -48,6 +48,8 @@ class LandmarkHead(nn.Module):
 
 
 class RetinaFace(nn.Module):
+    input_size = 256, 256
+
     def __init__(self, cfg=None, phase='train'):
         """
         :param cfg:  Network related settings.

@@ -38,7 +38,7 @@ for batch in tqdm(dataloader):
 
     img_tensor = img_tensor.to(0)
 
-    det = cropper.find_face_batch(img_tensor=img_tensor, img_meta=meta)
+    det = cropper.find_face_batch(img_tensor=img_tensor, orig_size=meta)
     result.append(det)
 
 with open('{}.crops.pck'.format(args.pck_path), 'wb') as f:

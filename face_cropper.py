@@ -49,11 +49,13 @@ def scale_result(result, im_height, im_width, meta):
 
 
 class Cropper:
+    input_size = 256, 256
+
     def __init__(self,
                  im_width,
                  im_height,
                  network='mobile0.25',
-                 weights_path='/Users/a16976500/Documents/Pytorch_Retinaface/weights/mobilenet0.25_Final.pth',
+                 weights_path='/home/lyan/PycharmProjects/Pytorch_Retinaface/weights/mobilenet0.25_Final.pth',
                  ):
         if network == "mobile0.25":
             cfg = cfg_mnet
@@ -73,7 +75,6 @@ class Cropper:
         net = RetinaFace(cfg=cfg, phase='test')
         net = load_model(net, weights_path, cpu)
         net.eval()
-        print(net)
         print('Finished loading model!')
         if not cpu:
             torch.backends.cudnn.benchmark = True
@@ -125,7 +126,17 @@ class Cropper:
         img = img.transpose(2, 0, 1)
         return torch.from_numpy(img).unsqueeze(0)
 
-    def find_face_batch(self, img_tensor, img_meta):
+    def predict_on_batch(self, img_tensor, orig_size):
+        t=np.array([104, 117, 123]).astype(np.uint8)
+        t = np.tile(t, img_tensor.shape[0]).reshape(img_tensor.shape[0], 3)
+        # img_tensor = img_tensor - t
+        img_tensor = img_tensor.transpose(0, 3, 1, 2)
+        img_tensor = torch.from_numpy(img_tensor).float()
+        result = self.find_face_batch(img_tensor, orig_size)
+        print(len(result), result[0].shape)
+        return result
+
+    def find_face_batch(self, img_tensor, orig_size):
         _, _, h, w = img_tensor.shape
         scale = torch.Tensor([img_tensor.shape[2],
                               img_tensor.shape[3],
@@ -135,8 +146,11 @@ class Cropper:
         img = img_tensor.to(self.device)
         scale = scale.to(self.device)
         loc, conf, landms = self.net(img)
-        return self.__postprocess__(im_height=h, im_width=w, loc=loc, scale=scale,
-                                    img=img, conf=conf, landms=landms, meta=img_meta)
+        result = self.__postprocess__(im_height=h, im_width=w, loc=loc, scale=scale,
+                                      img=img, conf=conf, landms=landms, orig_size=orig_size)
+        result = np.concatenate(result)
+        result[result[:, 4] > 0.8]
+        return result
 
     def find_face_npimg(self, img_raw):
         img = img_raw.astype(np.float32)
@@ -155,7 +169,8 @@ class Cropper:
                                     loc=loc, scale=scale, img=img,
                                     conf=conf, landms=landms)
 
-    def __postprocess__(self, im_height, im_width, loc, scale, img, conf, landms, meta=None):
+    # @jit
+    def __postprocess__(self, im_height, im_width, loc, scale, img, conf, landms, orig_size=None):
 
         n_res = loc.shape[0]
         scale1 = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
@@ -197,9 +212,11 @@ class Cropper:
             dets = dets[:keep_top_k, :]
             landmarks = landmarks[:keep_top_k, :]
             fdet = np.concatenate((dets, landmarks), axis=1)
-            if meta is not None:
+            if orig_size is not None:
                 scale_result(fdet, im_height=im_height, im_width=im_width,
-                                    meta=meta.numpy().astype(np.float32)[i, :])
+                             meta=orig_size.numpy().astype(np.float32)[i, :])
+                             # meta=orig_size)
+            fdet = torch.from_numpy(fdet)
             result.append(fdet)
 
         return result
