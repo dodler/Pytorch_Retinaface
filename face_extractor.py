@@ -111,6 +111,7 @@ class FaceExtractor:
             frame_size = (frames[v].shape[2], frames[v].shape[1])
 
             # detections = self._untile_detections(num_frames, frame_size, detections)
+            print(detections.shape)
             detections = detections[:num_frames]
             print(len(detections))
 
@@ -122,7 +123,8 @@ class FaceExtractor:
                 faces = self._add_margin_to_detections(detections[i], frame_size, 0.2)
                 faces = self._crop_faces(frames[v][i], faces)
 
-                scores = list(detections[i][:, 4].cpu().numpy())
+                # scores = list(detections[i][:, 4].cpu().numpy())
+                scores = detections[i, 4]
                 frame_dict = {"video_idx": videos_read[v],
                               "frame_idx": frames_read[v][i],
                               "frame_w": frame_size[0],
@@ -297,12 +299,17 @@ class FaceExtractor:
 
         Returns a PyTorch tensor of shape (num_detections, 17).
         """
-        offset = torch.round(margin * (detections[:, 2] - detections[:, 0]))
-        detections = detections.clone()
-        detections[:, 0] = torch.clamp(detections[:, 0] - offset * 2, min=0)  # ymin
-        detections[:, 1] = torch.clamp(detections[:, 1] - offset, min=0)  # xmin
-        detections[:, 2] = torch.clamp(detections[:, 2] + offset, max=frame_size[1])  # ymax
-        detections[:, 3] = torch.clamp(detections[:, 3] + offset, max=frame_size[0])  # xmax
+        # offset = torch.round(margin * (detections[:, 2] - detections[:, 0]))
+        detections = detections.reshape(1, -1)
+        offset = np.round(margin * (detections[:, 2] - detections[:, 0]))
+        # detections = detections.clone()
+        detections[:, 0] = np.clip(a=detections[:, 0] - offset * 2, a_max=detections[:, 0] - offset * 2,
+                                   a_min=0)  # ymin
+        detections[:, 1] = np.clip(detections[:, 1] - offset, a_max=detections[:, 1] - offset, a_min=0)  # xmin
+        detections[:, 2] = np.clip(detections[:, 2] + offset, a_min=detections[:, 2] + offset,
+                                   a_max=frame_size[1])  # ymax
+        detections[:, 3] = np.clip(detections[:, 3] + offset, a_min=detections[:, 3] + offset,
+                                   a_max=frame_size[0])  # xmax
         return detections
 
     def _crop_faces(self, frame, detections):
@@ -318,7 +325,7 @@ class FaceExtractor:
         """
         faces = []
         for i in range(len(detections)):
-            ymin, xmin, ymax, xmax = detections[i, :4].cpu().numpy().astype(np.int)
+            ymin, xmin, ymax, xmax = detections[i, :4].astype(np.int)  # .cpu().numpy().astype(np.int)
             face = frame[ymin:ymax, xmin:xmax, :]
             faces.append(face)
         return faces

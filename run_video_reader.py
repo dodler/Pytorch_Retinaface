@@ -19,5 +19,5 @@ face_extractor = FaceExtractor(video_read_fn, facedet)
 t = face_extractor.process_video('/home/lyan/PycharmProjects/Pytorch_Retinaface/aassnaulhq.mp4')
 # print(t)
 import matplotlib.pyplot as plt
-plt.imshow(t[0]['faces'][0])
+plt.imshow(t[1]['faces'][0])
 plt.show()

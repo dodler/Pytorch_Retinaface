@@ -128,12 +128,10 @@ class Cropper:
 
     def predict_on_batch(self, img_tensor, orig_size):
         t=np.array([104, 117, 123]).astype(np.uint8)
-        t = np.tile(t, img_tensor.shape[0]).reshape(img_tensor.shape[0], 3)
-        # img_tensor = img_tensor - t
+        img_tensor = img_tensor - t
         img_tensor = img_tensor.transpose(0, 3, 1, 2)
         img_tensor = torch.from_numpy(img_tensor).float()
         result = self.find_face_batch(img_tensor, orig_size)
-        print(len(result), result[0].shape)
         return result
 
     def find_face_batch(self, img_tensor, orig_size):
